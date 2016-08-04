@@ -1,0 +1,1 @@
+/usr/bin/gcc      CMakeFiles/my_playback.dir/my_playback.c.o  -o my_playback -rdynamic -lasound 

@@ -1,0 +1,24 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/uidj4668/code/C/ALSA/write_loop/my/my_playback.c
+my_playback.h
+/home/uidj4668/code/C/ALSA/write_loop/my/my_playback.h
+
+/home/uidj4668/code/C/ALSA/write_loop/my/my_playback.h
+alsa/asoundlib.h
+-
+unistd.h
+-
+signal.h
+-
+math.h
+-
+limits.h
+-
+

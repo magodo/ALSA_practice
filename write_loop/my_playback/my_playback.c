@@ -1,0 +1,400 @@
+/*************************************************************************
+ Author: Zhaoting Weng
+ Created Time: Wed 13 Apr 2016 09:26:19 PM CST
+ Description: 
+ ************************************************************************/
+#include "my_playback.h"
+
+/**********************
+ * Globals
+ **********************/
+volatile sig_atomic_t signal_pause_switch = 1;  // 1 pause, 0 resume
+#ifdef MY_PLAYBACK_DEBUG
+    static snd_output_t *output;
+#endif
+
+/**********************
+ * Functions
+ **********************/
+
+/*
+ * @brief       Echo an error message
+ */
+static void pr_error(const char *msg, int err)
+{
+    fprintf(stderr, "%s: %s\n", msg, snd_strerror(err));
+}
+
+/*
+ * @brief           Generate sine wave data
+ * @in handle       Handler for PCM device, from which we can fetch all information
+ * @in|out buf      Buffer in which we need to fill in sine wave data
+ * @in buf_size     Indicate length of buffer
+ * @in freq         Requested frequency
+ * @in|out phase    Sine wave starting phase
+ */
+
+static void generate_sine_wave(snd_pcm_t *handle, char *buf, ssize_t buf_size, unsigned int freq, double *phase)
+{
+    snd_pcm_hw_params_t *hw_params; 
+    snd_pcm_format_t format;
+    snd_pcm_uframes_t period_size;
+    unsigned int chn;
+    unsigned int fs;
+    int format_width;               // in bit
+    int bps;                        // in byte
+    int format_physical_width;      // in bit
+    int phys_bps;                   // in byte
+    int is_big_endian;
+    int is_unsigned; // only for linear format
+    int is_float;    // FIXME: not sure if float is linear or non-linear(*)
+
+    unsigned int max_value;
+    double step;
+    int frame, ch, i, offset;
+
+    union {
+        float f;
+        int i;
+    } val;
+    int res;
+
+    /* Retrieve current hardware parameters */
+    snd_pcm_hw_params_malloc(&hw_params);
+    snd_pcm_hw_params_current(handle, hw_params);
+    snd_pcm_hw_params_get_period_size(hw_params, &period_size, 0);
+    snd_pcm_hw_params_get_format(hw_params, &format);
+    snd_pcm_hw_params_get_channels(hw_params, &chn);
+    snd_pcm_hw_params_get_rate(hw_params, &fs, 0);
+    format_width = snd_pcm_format_width(format);
+    bps = format_width / 8;
+    format_physical_width = snd_pcm_format_physical_width(format);
+    phys_bps = format_physical_width / 8;
+    is_big_endian = snd_pcm_format_big_endian(format) == 1;
+    is_unsigned = snd_pcm_format_unsigned(format) == 1;
+    is_float = snd_pcm_format_float(format) == 1;
+
+    step = 2 * M_PI * freq / fs;
+
+    for (frame = 0; frame < period_size; frame++)
+    {
+        /* update phase */
+        *phase += step;
+        if (*phase > 2*M_PI)
+        {
+            *phase -= 2*M_PI;
+        }
+
+        /* calculate value */
+        if (is_float)
+        {
+            val.f = sin(*phase);
+            res = val.i;
+        }
+        else
+        {
+            int pos_peak = (1 << (format_width-1))-1;
+            res = sin(*phase) * pos_peak;
+        }
+        // FIXME check if here needs to handle "float" format also
+        if (is_unsigned)
+        {
+            res ^= (1U <<(format_width-1));
+        }
+        for (ch = 0; ch < chn; ch++)
+        {
+            for (i = 0; i < bps; i++)  // only loop to bps since the residential bits are just ignored
+            {
+                if (is_big_endian)
+                {
+                    offset = phys_bps - 1 - i; // set lower part of resutl to higher addressed memory
+                }
+                else
+                {
+                    offset = i; // set lower part of result to lower addressed memory
+                }
+                *(buf + ch*phys_bps + frame*chn*phys_bps + offset) = (res >> i*8) & 0xff;
+            }
+        }
+    }
+
+    snd_pcm_hw_params_free(hw_params);
+}
+
+/*
+ * Prepare device to playback
+ * @in device_name          PCM device name which will play audio
+ * @out handle              Handler to the opened PCM device
+ */
+void prepare_device(const char *device_name, snd_pcm_t **handle)
+{
+    const snd_pcm_format_t format    = SND_PCM_FORMAT_S16_LE;
+    const unsigned int chn           = 2;       //stero
+    unsigned int fs                  = 44100;
+    unsigned int period_time         = 100000;  // us
+    snd_pcm_uframes_t period_size;              // in frame
+    unsigned int buffer_time         = 500000;  // us
+    int can_pause;
+
+    int err;
+    snd_pcm_hw_params_t *hw_params;
+
+
+#ifdef MY_PLAYBACK_DEBUG
+    snd_output_stdio_attach(&output, stdout, 0);
+#endif
+
+    /* open PCM device for playback */
+    err = snd_pcm_open(handle, device_name, SND_PCM_STREAM_PLAYBACK, 0);
+    if (err < 0)
+    {
+        pr_error("Open PCM device failed", err);
+        exit(1);
+    }
+
+    /* Set HW parameters */
+    snd_pcm_hw_params_malloc(&hw_params);
+    snd_pcm_hw_params_any(*handle, hw_params);
+    
+    snd_pcm_hw_params_set_access(*handle, hw_params, SND_PCM_ACCESS_RW_INTERLEAVED); //interleaved
+    snd_pcm_hw_params_set_rate_near(*handle, hw_params, &fs, 0);
+
+    snd_pcm_hw_params_set_period_time_near(*handle, hw_params, &period_time, 0);
+    snd_pcm_hw_params_get_period_size(hw_params, &period_size, 0);
+
+    snd_pcm_hw_params_set_buffer_time_near(*handle, hw_params, &buffer_time, 0);
+
+    snd_pcm_hw_params_set_channels(*handle, hw_params, chn);
+    snd_pcm_hw_params_set_format(*handle, hw_params, format);
+    
+    err = snd_pcm_hw_params(*handle, hw_params);
+    if (err < 0)
+    {
+        pr_error("Unable to set hw parameters", err);
+        exit(1);
+    }
+    can_pause = snd_pcm_hw_params_can_resume(hw_params) == 1;
+
+#ifdef MY_PLAYBACK_DEBUG
+    snd_pcm_dump_hw_setup(*handle, output);
+
+    fprintf(stdout, "PCM device pauseable? ");
+    if (can_pause)
+    {
+        fprintf(stdout, "Yes\n");
+    }
+    else
+    {
+        fprintf(stdout, "No\n");
+    }
+#endif
+
+    /* Set SW parameters */
+
+#ifdef MY_PLAYBACK_DEBUG
+    snd_pcm_dump_sw_setup(*handle, output);
+#endif
+
+    /* Clear */
+    snd_pcm_hw_params_free(hw_params);
+}
+
+/*
+ * @brief                   Playback 
+ * @in handle               PCM handler
+ * @in duration             Duration of the play in us. 0 forever play.
+ */
+
+void playback(snd_pcm_t *handle, unsigned int duration)
+{
+    snd_pcm_hw_params_t *hw_params; 
+    snd_pcm_uframes_t period_size;
+    unsigned int period_time;
+    char *buf;
+    ssize_t buf_size;                           // in byte
+    int playcnt, i;
+    unsigned freq = 4000;                      // sine wave frequency(Hz)
+    double phase = 0.0;
+    int err;
+    int is_paused = 1;                         // if PCM device is paused: 1: paused; 0: not paused
+
+#ifdef MY_PLAYBACK_DEBUG
+    printf("Sine wave frequency is %dHz\n", freq);
+#endif
+
+    snd_pcm_hw_params_malloc(&hw_params);
+    snd_pcm_hw_params_current(handle, hw_params);
+    snd_pcm_hw_params_get_period_size(hw_params, &period_size, 0);
+    snd_pcm_hw_params_get_period_time(hw_params, &period_time, 0);
+
+#ifdef MY_PLAYBACK_DEBUG
+    /* Check return value of `snd_pcm_avail_update` for playback device
+     * The API document says:
+     * >>> Return number of frames ready to be read (capture) / written (playback) */
+    printf("avail_update return: %d\navail return: %d\n", (int)snd_pcm_avail_update(handle), (int)snd_pcm_avail(handle));
+#endif
+
+    /* Allocate a buffer to contain all samples in one period
+     * sample count == period_size(frame) * channel_cnt * byte per sample
+     * or 
+     * use snd_pcm_frames_to_bytes() API
+     */
+    buf_size = snd_pcm_frames_to_bytes(handle, period_size);
+    buf = (char*)malloc(buf_size);
+
+    /* Determine how many periods to output or if play forever */
+    if (duration != 0)
+    {
+        playcnt = duration / period_time;
+    }
+    else
+    {
+        playcnt = INT_MAX; // at least enter loop
+    }
+
+    for (i = 0; i < playcnt; i++)
+    {
+        /* Iterate from 0 if we want play in whole lifetime */
+        if ((i == playcnt-1) && (duration == 0))
+        {
+            i = 0; // forever play
+        }
+        generate_sine_wave(handle, buf, buf_size, freq, &phase);
+
+        /* Since PCM is opened in BLOCK mode, the routine waits until all requested samples
+         * are put to the playback ring buffer. In which case, playback ring buffer will never
+         * overflow.
+         *
+         * However, if this process doesn't feed new samples to ring buffer in time. An underrun
+         * occurs. Which will return value less than requested. Need to recover/prepare, i.e.
+         * prepare for next I/O.
+         */
+
+        /* Puase handling */
+        while (signal_pause_switch) // parent process says to pause
+        {
+            if (!is_paused)
+            {
+                snd_pcm_pause(handle, 1);
+                is_paused = 1;
+            }
+        }
+        if (is_paused)
+        {
+            snd_pcm_pause(handle, 0);
+            is_paused = 0;
+        }
+
+        /* write data to ring buffer */
+        err = snd_pcm_writei(handle, buf, period_size);
+
+        /* only when device is opened in NONBLOCK mode */
+        if (err == -EAGAIN)
+        {
+            continue;
+        }
+        /* Overrun occr */
+        else if (err == -EPIPE)
+        {
+            pr_error("Underrun occur", err);
+            err = snd_pcm_prepare(handle);
+            if (err < 0)
+                pr_error("Can't recover from underrun, prepare failed", err);
+        }
+        /* Device suspended */
+        else if (err == -ESTRPIPE)
+        {
+            while ((err = snd_pcm_resume(handle)) == -EAGAIN)
+            {
+                sleep(1);
+            }
+            if (err < 0)
+            {
+                err = snd_pcm_prepare(handle);
+                if (err < 0)
+                    pr_error("Can't recover from suspend, prepare failed", err);
+            }
+        }
+        /* Other error cases */
+        else if (err < 0)
+        {
+            pr_error("Other error occur", err);
+            err = snd_pcm_recover(handle, err, 0);
+            if (err < 0)
+                pr_error("Can't recover from other error, recover failed", err);
+        }
+        else if (err < period_size)
+        {
+            fprintf(stderr, "Short write, write %d frames\n", err);
+        }
+    }
+    
+    /* Clear */
+    snd_pcm_hw_params_free(hw_params);
+    free(buf);
+}
+
+
+#ifdef MY_PLAYBACK_MAIN
+/*
+ * @brief           Switch pause switcher for playing
+ */
+void pause_switch(int sig)
+{
+    signal_pause_switch = signal_pause_switch? 0:1; 
+}
+
+
+/*
+ * MAIN
+ */
+void main()
+{
+    pid_t ch_pid;
+    struct sigaction user_action;
+    sigset_t block_mask;
+
+    /* Establish the signal handler */
+    sigfillset(&block_mask);
+    user_action.sa_handler = pause_switch;
+    user_action.sa_mask = block_mask;
+    user_action.sa_flags = 0;
+    sigaction(SIGUSR1, &user_action, NULL);
+
+    /* Create the child process */
+    if ((ch_pid = fork()) < 0)
+    {
+        fprintf(stderr, "Fork failed\n");
+    }
+    else if (ch_pid == 0)  /* child */
+    {
+        const char *device_name = "hw:0,1";
+        snd_pcm_t *handle;
+        unsigned int duration = 10000000; 
+        //unsigned int duration = 0; 
+
+        prepare_device(device_name, &handle);
+        playback(handle, duration);
+
+        snd_pcm_drain(handle);
+        snd_pcm_close(handle);
+        printf("Child exit\n");
+        exit(0);
+    }
+    else                /* parent */
+    {
+        sleep(2);      // FIXME need sync waiting for PCM device prepared
+        fprintf(stdout, "PCM device should be ready...\n");
+        kill(ch_pid, SIGUSR1);
+        fprintf(stdout, "Let's play!\n");
+        sleep(2);
+        fprintf(stdout, "Let's stop for a while!\n");
+        kill(ch_pid, SIGUSR1);
+        sleep(2);
+        fprintf(stdout, "Let's play (again)!\n");
+        kill(ch_pid, SIGUSR1);
+        sleep(2);
+        printf("Parent exit\n");
+    }
+}
+#endif
