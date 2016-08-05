@@ -16,19 +16,20 @@
 
 /* HW Param */
 // - access type
-snd_pcm_access_t access_type        = SND_PCM_ACCESS_RW_INTERLEAVED;
+snd_pcm_access_t access_type                = SND_PCM_ACCESS_RW_INTERLEAVED;
 // - stream param
-snd_pcm_format_t format             = SND_PCM_FORMAT_S16_LE;
-unsigned int channel                = 2;
-unsigned int rate                   = 44100;
+snd_pcm_format_t format                     = SND_PCM_FORMAT_S16_LE;
+unsigned int channel                        = 2;
+unsigned int rate                           = 44100;
 // - buffer param
-unsigned int periods                = 4;
-unsigned int period_time            = 10000; // us == 100(ms)
+unsigned int periods                        = 4;
+unsigned int period_time                    = 10000; // us == 100(ms)
 
 /* SW Param */
-unsigned int start_threshold_factor = 0;
+unsigned int start_threshold_factor         = 0;
 
-volatile sig_atomic_t signal_pause_switch = 1;
+/* Capture toggle */
+volatile sig_atomic_t signal_pause_switch   = 1;
 
 /****************************
  * Helper Functions
@@ -51,31 +52,58 @@ void dump_period_info(snd_pcm_hw_params_t* hw_params)
 {
 
     snd_pcm_uframes_t approx_period_size;
-    unsigned int approx_period_time;
+    unsigned int approx_period_time, approx_rate;
     unsigned int rate_num, rate_den;
 
-    /* what is `dir` used for in `get` APIs */
-    /*
+    /* what is `dir` used for in `get` APIs??? */
     int dir;
-    for (dir = -1; dir < 2; dir++)
+
+    snd_pcm_hw_params_get_rate(hw_params, &approx_rate, &dir);
+    fprintf(stdout, "Approximate rate: %ld", (long)approx_rate);
+    switch (dir)
     {
-        snd_pcm_hw_params_get_period_size(hw_params, &approx_period_size, &dir);
-        fprintf(stdout, "Approximate period size: %ld Dir: %d\n", (long)approx_period_size, dir);
-
-        snd_pcm_hw_params_get_period_time(hw_params, &approx_period_time, &dir);
-        fprintf(stdout, "Approximate period time: %ld Dir: %d\n", (long)approx_period_time, dir);
+        case (-1):
+            fputs(", the exact value < this approximate value\n", stdout);
+            break;
+        case (0):
+            fputs(", the exact value = this approximate value\n", stdout);
+            break;
+        case (1):
+            fputs(", the exact value > this approximate value\n", stdout);
+            break;
     }
-    */
-    fprintf(stdout, "\n");
-
     snd_pcm_hw_params_get_rate_numden(hw_params, &rate_num, &rate_den);
     fprintf(stdout, "Rate numerator: %d; Rate denominator: %d Actual Rate: %f\n", rate_num, rate_den, rate_num/(double)rate_den);
 
-    snd_pcm_hw_params_get_period_size(hw_params, &approx_period_size, NULL);
-    fprintf(stdout, "Approximate period size: %ld\n", (long)approx_period_size);
+    snd_pcm_hw_params_get_period_size(hw_params, &approx_period_size, &dir);
+    fprintf(stdout, "Approximate period size: %ld", (long)approx_period_size);
+    switch (dir)
+    {
+        case (-1):
+            fputs(", the exact value < this approximate value\n", stdout);
+            break;
+        case (0):
+            fputs(", the exact value = this approximate value\n", stdout);
+            break;
+        case (1):
+            fputs(", the exact value > this approximate value\n", stdout);
+            break;
+    }
 
-    snd_pcm_hw_params_get_period_time(hw_params, &approx_period_time, NULL);
-    fprintf(stdout, "Approximate period time: %ld\n", (long)approx_period_time);
+    snd_pcm_hw_params_get_period_time(hw_params, &approx_period_time, &dir);
+    fprintf(stdout, "Approximate period time: %ld", (long)approx_period_time);
+    switch (dir)
+    {
+        case (-1):
+            fputs(", the exact value < this approximate value\n", stdout);
+            break;
+        case (0):
+            fputs(", the exact value = this approximate value\n", stdout);
+            break;
+        case (1):
+            fputs(", the exact value > this approximate value\n", stdout);
+            break;
+    }
 
     fprintf(stdout, "\n");
 }
@@ -84,7 +112,7 @@ void dump_period_info(snd_pcm_hw_params_t* hw_params)
  * Signal Handler Functions
  ****************************/
 
-void handler(int sig)
+void toggle(int sig)
 {
     signal_pause_switch = signal_pause_switch? 0:1;
 }
@@ -147,7 +175,7 @@ int prepare_device(const char* device_name, snd_pcm_t **handle)
     /* SW Params */
     snd_pcm_sw_params_t* sw_params;
 
-    int err;
+    int err, dir;
     snd_output_t* snd_out;  // used for dumping PCM info
 
     /* Open PCM device */
@@ -198,11 +226,12 @@ int prepare_device(const char* device_name, snd_pcm_t **handle)
     }
     if (channel != channel_expect)
     {
-        fprintf(stderr, "WARN:HW:channel:\n\tExpect: %d\n\tActual: %d\n", channel_expect, channel);
+        fprintf(stderr, "WARN:HW:channel:\n\tExpect: %d\n\tApprox: %d\n", channel_expect, channel);
     }
 
     unsigned int rate_expect = rate;
-    err = snd_pcm_hw_params_set_rate_near(*handle, hw_params, &rate, NULL);
+    fprintf(stdout, "DIR is set to: %d\n", dir);
+    err = snd_pcm_hw_params_set_rate_near(*handle, hw_params, &rate, &dir);
     if (err < 0) 
     {
         fprintf(stderr, "snd_pcm_hw_params_set_rate_near failed: %s\n", snd_strerror(err));
@@ -210,7 +239,7 @@ int prepare_device(const char* device_name, snd_pcm_t **handle)
     }
     if (rate != rate_expect)
     {
-        fprintf(stderr, "WARN:HW:rate:\n\tExpect: %d\n\tActual: %d\n",  rate_expect, rate);
+        fprintf(stderr, "WARN:HW:rate:\n\tExpect: %d\n\tApprox: %d\n",  rate_expect, rate);
     }
 
     // - buffer param
@@ -224,7 +253,7 @@ int prepare_device(const char* device_name, snd_pcm_t **handle)
     }
     if (period_time != period_time_expect)
     {
-        fprintf(stderr, "WARN:HW:period_time:\n\tExpect: %d\n\tActual: %d\n", period_time_expect, period_time);
+        fprintf(stderr, "WARN:HW:period_time:\n\tExpect: %d\n\tApprox: %d\n", period_time_expect, period_time);
     }
 
     unsigned int periods_expect = periods;
@@ -236,7 +265,7 @@ int prepare_device(const char* device_name, snd_pcm_t **handle)
     }
     if (periods != periods_expect)
     {
-        fprintf(stderr, "WARN:HW:periods:\n\tExpect: %d\n\tActual: %d\n", periods_expect, periods);
+        fprintf(stderr, "WARN:HW:periods:\n\tExpect: %d\n\tApprox: %d\n", periods_expect, periods);
     }
 
     /*
@@ -249,7 +278,7 @@ int prepare_device(const char* device_name, snd_pcm_t **handle)
     }
     if (buffer_time != buffer_time_expect)
     {
-        fprintf(stderr, "WARN:HW:buffer_time:\n\tExpect: %d\n\tActual: %d\n", buffer_time_expect, buffer_time);
+        fprintf(stderr, "WARN:HW:buffer_time:\n\tExpect: %d\n\tApprox: %d\n", buffer_time_expect, buffer_time);
     }
     */
 
@@ -264,6 +293,8 @@ int prepare_device(const char* device_name, snd_pcm_t **handle)
     {
         fprintf(stdout, "Set HW parameters finished\n");
     }
+
+    //dump_period_info(hw_params);
 
     /* Set SW Params */
     err = snd_pcm_sw_params_malloc(&sw_params);
@@ -298,7 +329,7 @@ int prepare_device(const char* device_name, snd_pcm_t **handle)
     }
     else
     {
-        fprintf(stdout, "Set sW parameters finished\n");
+        fprintf(stdout, "Set SW parameters finished\n");
     }
 
     /* Dump PCM information */
@@ -324,14 +355,14 @@ int prepare_device(const char* device_name, snd_pcm_t **handle)
 
 int main()
 {
-    //const char* device_name = "hw:0,0";
-    const char* device_name = "sd_carplay_downlink_in";
+    const char* device_name = "hw:0,0";
+    //const char* device_name = "sd_carplay_downlink_in";
     int ret;
     snd_pcm_t* handle;
     struct sigaction act;
 
     /* install signal handler */
-    act.sa_handler = handler;
+    act.sa_handler = toggle;
     sigemptyset(&act.sa_mask);
     act.sa_flags = 0;
 
@@ -381,16 +412,14 @@ int main()
 
             case (SND_PCM_STATE_XRUN):
                 fputs("State transition: XRUN -> RUNNING\n", stdout);
-                ret = xrun_recovery(handle, -EPIPE);
-                if (ret < 0)
+                if (xrun_recovery(handle, -EPIPE) < 0)
                     exit(1);
                 else 
                     continue;
 
             case (SND_PCM_STATE_SUSPENDED):
                 fputs("State transition: SUSPENDED -> RUNNING\n", stdout);
-                ret = xrun_recovery(handle, -ESTRPIPE);
-                if (ret < 0)
+                if (xrun_recovery(handle, -ESTRPIPE) < 0)
                     exit(1);
                 else 
                     continue;
@@ -405,8 +434,7 @@ int main()
         cnt_avail_frame = snd_pcm_avail_update(handle);
         if (cnt_avail_frame < 0)
         {
-            ret = xrun_recovery(handle, cnt_avail_frame);
-            if (ret != 0)
+            if (xrun_recovery(handle, cnt_avail_frame) < 0)
                 exit(1);
             else
                 continue;
@@ -421,8 +449,7 @@ int main()
             ret = snd_pcm_wait(handle, -1);
             if (ret < 0)
             {
-                ret = xrun_recovery(handle, ret);
-                if (ret != 0)
+                if (xrun_recovery(handle, ret) < 0)
                     exit(1);
                 else 
                     continue;
@@ -437,12 +464,10 @@ int main()
         //ret = snd_pcm_readi(handle, buf, frames);
         if (ret < 0)
         {
-            ret = xrun_recovery(handle, ret);
-            if (ret != 0)
-            {
-                pr_error("snd_pcm_mmap_begin failed", ret);
+            if (xrun_recovery(handle, ret) < 0)
                 exit(1);
-            }
+            else
+                continue;
         }
         else
         {
@@ -453,9 +478,18 @@ int main()
             dump_areainfo(areas);
             fprintf(stdout, "Offset: %lu(frame)\n", (unsigned long)offset);
             fprintf(stdout, "Frame: %lu(frame)\n", (unsigned long)frames);
-            // TODO:commit
+
+            ret = snd_pcm_mmap_commit(handle, offset, frames);
+            if (ret < 0 || ret != frames)
+            {
+                if (xrun_recovery(handle, ret >= 0 ? -EPIPE : ret) < 0)
+                    exit(1);
+                else
+                    continue;
+            }
         }
 
+        /* Sleep so that we can get less log and get over-run */
         //sleep(1);
         usleep(10000); // 10ms
     }
