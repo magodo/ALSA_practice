@@ -1,1 +1,1 @@
-/usr/bin/gcc      CMakeFiles/my_capture.dir/my_capture.c.o  -o my_capture -rdynamic -lasound 
+/usr/bin/cc     CMakeFiles/my_capture.dir/my_capture.c.o  -o my_capture -rdynamic -lasound 
