@@ -6,7 +6,7 @@
 
 #IncludeRegexTransform: 
 
-/home/uidj4668/code/C/ALSA/demo/pcm.c
+/home/magodo/code/c/ALSA/ALSA_practice/demo/pcm.c
 stdio.h
 -
 stdlib.h
@@ -20,7 +20,7 @@ errno.h
 getopt.h
 -
 alsa/asoundlib.h
-/home/uidj4668/code/C/ALSA/demo/alsa/asoundlib.h
+/home/magodo/code/c/ALSA/ALSA_practice/demo/alsa/asoundlib.h
 sys/time.h
 -
 math.h

@@ -18,7 +18,7 @@
 #include "alsa/asoundlib.h"
 #include <sys/time.h>
 #include <math.h>
-static char *device = "hw:7,0";                         /* playback device */
+static char *device = "hw:0,0";                         /* playback device */
 static snd_pcm_format_t format = SND_PCM_FORMAT_S16;    /* sample format */
 static unsigned int rate = 44100;                       /* stream rate */
 static unsigned int channels = 2;                       /* count of channels */
