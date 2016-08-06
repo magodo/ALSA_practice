@@ -222,6 +222,13 @@ int prepare_device(const char* device_name, snd_pcm_t **handle)
     }
 
     // 2.2 access type
+    err = snd_pcm_hw_params_test_access(*handle, hw_params, access_type);
+    if (err < 0)
+    {
+        fflush(stdout);
+        fprintf(stderr, "%s not supported\n", snd_pcm_access_name(access_type));
+        return 1;
+    }
     err = snd_pcm_hw_params_set_access(*handle, hw_params, access_type);
     if (err < 0) 
     {
@@ -567,7 +574,6 @@ int main()
         }
 
         /* Sleep so that we can get less log and get over-run */
-        //sleep(1);
         usleep(11000); // 11ms
 
         fprintf(stdout, "********************\n");
