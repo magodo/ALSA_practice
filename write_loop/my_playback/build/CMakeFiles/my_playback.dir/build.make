@@ -32,10 +32,10 @@ CMAKE_COMMAND = /usr/bin/cmake
 RM = /usr/bin/cmake -E remove -f
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/uidj4668/code/C/ALSA/write_loop/my
+CMAKE_SOURCE_DIR = /home/uidj4668/code/C/ALSA/write_loop/my_playback
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/uidj4668/code/C/ALSA/write_loop/my/build
+CMAKE_BINARY_DIR = /home/uidj4668/code/C/ALSA/write_loop/my_playback/build
 
 # Include any dependencies generated for this target.
 include CMakeFiles/my_playback.dir/depend.make
@@ -48,17 +48,17 @@ include CMakeFiles/my_playback.dir/flags.make
 
 CMakeFiles/my_playback.dir/my_playback.c.o: CMakeFiles/my_playback.dir/flags.make
 CMakeFiles/my_playback.dir/my_playback.c.o: ../my_playback.c
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/uidj4668/code/C/ALSA/write_loop/my/build/CMakeFiles $(CMAKE_PROGRESS_1)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/uidj4668/code/C/ALSA/write_loop/my_playback/build/CMakeFiles $(CMAKE_PROGRESS_1)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building C object CMakeFiles/my_playback.dir/my_playback.c.o"
-	/usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -o CMakeFiles/my_playback.dir/my_playback.c.o   -c /home/uidj4668/code/C/ALSA/write_loop/my/my_playback.c
+	/usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -o CMakeFiles/my_playback.dir/my_playback.c.o   -c /home/uidj4668/code/C/ALSA/write_loop/my_playback/my_playback.c
 
 CMakeFiles/my_playback.dir/my_playback.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/my_playback.dir/my_playback.c.i"
-	/usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -E /home/uidj4668/code/C/ALSA/write_loop/my/my_playback.c > CMakeFiles/my_playback.dir/my_playback.c.i
+	/usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -E /home/uidj4668/code/C/ALSA/write_loop/my_playback/my_playback.c > CMakeFiles/my_playback.dir/my_playback.c.i
 
 CMakeFiles/my_playback.dir/my_playback.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/my_playback.dir/my_playback.c.s"
-	/usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -S /home/uidj4668/code/C/ALSA/write_loop/my/my_playback.c -o CMakeFiles/my_playback.dir/my_playback.c.s
+	/usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -S /home/uidj4668/code/C/ALSA/write_loop/my_playback/my_playback.c -o CMakeFiles/my_playback.dir/my_playback.c.s
 
 CMakeFiles/my_playback.dir/my_playback.c.o.requires:
 .PHONY : CMakeFiles/my_playback.dir/my_playback.c.o.requires
@@ -94,6 +94,6 @@ CMakeFiles/my_playback.dir/clean:
 .PHONY : CMakeFiles/my_playback.dir/clean
 
 CMakeFiles/my_playback.dir/depend:
-	cd /home/uidj4668/code/C/ALSA/write_loop/my/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/uidj4668/code/C/ALSA/write_loop/my /home/uidj4668/code/C/ALSA/write_loop/my /home/uidj4668/code/C/ALSA/write_loop/my/build /home/uidj4668/code/C/ALSA/write_loop/my/build /home/uidj4668/code/C/ALSA/write_loop/my/build/CMakeFiles/my_playback.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/uidj4668/code/C/ALSA/write_loop/my_playback/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/uidj4668/code/C/ALSA/write_loop/my_playback /home/uidj4668/code/C/ALSA/write_loop/my_playback /home/uidj4668/code/C/ALSA/write_loop/my_playback/build /home/uidj4668/code/C/ALSA/write_loop/my_playback/build /home/uidj4668/code/C/ALSA/write_loop/my_playback/build/CMakeFiles/my_playback.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/my_playback.dir/depend
 

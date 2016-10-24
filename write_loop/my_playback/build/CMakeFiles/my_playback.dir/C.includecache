@@ -6,11 +6,11 @@
 
 #IncludeRegexTransform: 
 
-/home/uidj4668/code/C/ALSA/write_loop/my/my_playback.c
+/home/uidj4668/code/C/ALSA/write_loop/my_playback/my_playback.c
 my_playback.h
-/home/uidj4668/code/C/ALSA/write_loop/my/my_playback.h
+/home/uidj4668/code/C/ALSA/write_loop/my_playback/my_playback.h
 
-/home/uidj4668/code/C/ALSA/write_loop/my/my_playback.h
+/home/uidj4668/code/C/ALSA/write_loop/my_playback/my_playback.h
 alsa/asoundlib.h
 -
 unistd.h

@@ -4,7 +4,7 @@ SET(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 SET(CMAKE_DEPENDS_CHECK_C
-  "/home/uidj4668/code/C/ALSA/write_loop/my/my_playback.c" "/home/uidj4668/code/C/ALSA/write_loop/my/build/CMakeFiles/my_playback.dir/my_playback.c.o"
+  "/home/uidj4668/code/C/ALSA/write_loop/my_playback/my_playback.c" "/home/uidj4668/code/C/ALSA/write_loop/my_playback/build/CMakeFiles/my_playback.dir/my_playback.c.o"
   )
 SET(CMAKE_C_COMPILER_ID "GNU")
 

@@ -131,10 +131,9 @@ void prepare_device(const char *device_name, snd_pcm_t **handle)
     const snd_pcm_format_t format    = SND_PCM_FORMAT_S16_LE;
     const unsigned int chn           = 2;       //stero
     unsigned int fs                  = 44100;
-    unsigned int period_time         = 400000;  // us
+    unsigned int period_time         = 100000;  // us
     snd_pcm_uframes_t period_size;              // in frame
-    unsigned int buffer_time         = 800000;  // us
-    snd_pcm_uframes_t buffer_size;              // in frame
+    unsigned int buffer_time         = 500000;  // us
     int can_pause;
 
     int err;
@@ -165,7 +164,6 @@ void prepare_device(const char *device_name, snd_pcm_t **handle)
     snd_pcm_hw_params_get_period_size(hw_params, &period_size, 0);
 
     snd_pcm_hw_params_set_buffer_time_near(*handle, hw_params, &buffer_time, 0);
-    snd_pcm_hw_params_get_buffer_size(hw_params, &buffer_size);
 
     snd_pcm_hw_params_set_channels(*handle, hw_params, chn);
     snd_pcm_hw_params_set_format(*handle, hw_params, format);
@@ -196,7 +194,7 @@ void prepare_device(const char *device_name, snd_pcm_t **handle)
 
     snd_pcm_sw_params_malloc(&sw_params);
     snd_pcm_sw_params_current(*handle, sw_params);
-    snd_pcm_sw_params_set_start_threshold(*handle, sw_params, period_size * 2);
+    snd_pcm_sw_params_set_start_threshold(*handle, sw_params, 0);
     snd_pcm_sw_params(*handle, sw_params);
 
 #ifdef MY_PLAYBACK_DEBUG
@@ -262,47 +260,9 @@ void playback(snd_pcm_t *handle, unsigned int duration)
         playcnt = INT_MAX; // at least enter loop
     }
 
-    /* Following code are for test on "start_threshold" ONLY */
-    /*
-    fprintf(stdout, "Init state: %s\n", snd_pcm_state_name(snd_pcm_state(handle)));
-
-    // manual start first
-    fprintf(stdout, "Start device: ");
-    err = snd_pcm_start(handle);
-    if (err < 0)
-    {
-        pr_error("start failed", err);
-    }
-    fprintf(stdout, "%s\n", snd_pcm_state_name(snd_pcm_state(handle)));
-
-    // write one period 
-    fprintf(stdout, "Write one period data: ");
-    err = snd_pcm_writei(handle, buf, period_size);
-    if (err < 0)
-    {
-        pr_error("write failed", err);
-    }
-    fprintf(stdout, "state: %s\n", snd_pcm_state_name(snd_pcm_state(handle)));
-
-    // manual start device
-    fprintf(stdout, "Start device: ");
-    err = snd_pcm_start(handle);
-    if (err < 0)
-    {
-        pr_error("start failed", err);
-    }
-    fprintf(stdout, "%s\n", snd_pcm_state_name(snd_pcm_state(handle)));
-
-    // write another period
-    fprintf(stdout, "Write another one period data: ");
-    err = snd_pcm_writei(handle, buf, period_size);
-    if (err < 0)
-    {
-        pr_error("write failed", err);
-    }
-    fprintf(stdout, "%s\n", snd_pcm_state_name(snd_pcm_state(handle)));
-    */
-
+    fprintf(stdout, "state: %d\n", snd_pcm_state(handle));
+    snd_pcm_start(handle);
+    fprintf(stdout, "state: %d\n", snd_pcm_state(handle));
     for (i = 0; i < playcnt; i++)
     {
         /* Iterate from 0 if we want play in whole lifetime */

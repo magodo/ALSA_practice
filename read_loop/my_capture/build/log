@@ -1,2 +1,0 @@
-snd_pcm_hw_params_set_access failed: Invalid argument
-prepare_device failed!

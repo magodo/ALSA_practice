@@ -4,7 +4,7 @@ PREFIX = /usr/local
 all: alsacap alsacap.1
 
 alsacap: alsacap.c
-	gcc -o $@ $^ -lasound
+	$(CROSS)gcc -o $@ $^ -lasound
 
 alsacap.1: alsacap.pod
 	pod2man -c "General Commands Manual" -r "" $< > $@

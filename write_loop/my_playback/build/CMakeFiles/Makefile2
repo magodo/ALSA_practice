@@ -44,10 +44,10 @@ CMAKE_COMMAND = /usr/bin/cmake
 RM = /usr/bin/cmake -E remove -f
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/uidj4668/code/C/ALSA/write_loop/my
+CMAKE_SOURCE_DIR = /home/uidj4668/code/C/ALSA/write_loop/my_playback
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/uidj4668/code/C/ALSA/write_loop/my/build
+CMAKE_BINARY_DIR = /home/uidj4668/code/C/ALSA/write_loop/my_playback/build
 
 #=============================================================================
 # Target rules for target CMakeFiles/my_playback.dir
@@ -56,7 +56,7 @@ CMAKE_BINARY_DIR = /home/uidj4668/code/C/ALSA/write_loop/my/build
 CMakeFiles/my_playback.dir/all:
 	$(MAKE) -f CMakeFiles/my_playback.dir/build.make CMakeFiles/my_playback.dir/depend
 	$(MAKE) -f CMakeFiles/my_playback.dir/build.make CMakeFiles/my_playback.dir/build
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/uidj4668/code/C/ALSA/write_loop/my/build/CMakeFiles  1
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/uidj4668/code/C/ALSA/write_loop/my_playback/build/CMakeFiles  1
 	@echo "Built target my_playback"
 .PHONY : CMakeFiles/my_playback.dir/all
 
@@ -66,9 +66,9 @@ all: CMakeFiles/my_playback.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/my_playback.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/uidj4668/code/C/ALSA/write_loop/my/build/CMakeFiles 1
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/uidj4668/code/C/ALSA/write_loop/my_playback/build/CMakeFiles 1
 	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/my_playback.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/uidj4668/code/C/ALSA/write_loop/my/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/uidj4668/code/C/ALSA/write_loop/my_playback/build/CMakeFiles 0
 .PHONY : CMakeFiles/my_playback.dir/rule
 
 # Convenience name for target.

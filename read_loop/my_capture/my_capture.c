@@ -23,7 +23,7 @@ static snd_pcm_format_t format                     = SND_PCM_FORMAT_S16_LE;
 static unsigned int channel                        = 2;
 static unsigned int rate                           = 44100;
 // - buffer param
-static unsigned int periods                        = 4;
+static unsigned int periods                        = 8;
 static unsigned int period_time                    = 10000; // us == 100(ms)
 static snd_pcm_sframes_t buffer_size;
 static snd_pcm_sframes_t period_size;
@@ -471,6 +471,7 @@ int main()
             case (SND_PCM_STATE_PREPARED):
                 fputs("State transition: PREPARED -> RUNNING\n", stdout);
                 ret = snd_pcm_start(handle);
+                //fprintf(stdout, "Current state: %s\n", snd_pcm_state_name(snd_pcm_state(handle)));
                 if (ret < 0)
                 {
                     fflush(stdout);
