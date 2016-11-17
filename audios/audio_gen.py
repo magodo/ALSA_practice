@@ -65,7 +65,7 @@ def audio_gen(fs, duration, audio_type, audio_format, audio_channel, freq, out_f
         peak = (1 << int(smp_depth))/2 - 1  # re-assign `peak`
         phase = 0
         step = 2 * math.pi * freq / fs
-        for sample_idx in range(duration * fs):
+        for sample_idx in range(int(duration * fs)):
             phase = (phase + step) % (2*math.pi)
             for _ in range(audio_channel):
                 magnitude = peak * math.sin(phase)
@@ -83,22 +83,22 @@ def audio_gen(fs, duration, audio_type, audio_format, audio_channel, freq, out_f
     if not out_file:
         if audio_type == "wnoise":
             out_file = "Fs_%d_Channel_%d_Format_%s_Len_%d_Wave_%s.pcm"%(
-                    fs,audio_channel, audio_format, duration, audio_type())
+                    int(fs), audio_channel, audio_format, int(duration), audio_type)
         else:
             out_file = "Fs_%d_Freq_%d_Channel_%d_Format_%s_Len_%d_Wave_%s.pcm"%(
-                    fs, freq, audio_channel, audio_format, duration, audio_type())
+                    int(fs), int(freq), audio_channel, audio_format, int(duration), audio_type)
 
     with open(out_file, 'w') as f:
         f.write(''.join(content))
 
 if "__main__" == __name__:
     parser = argparse.ArgumentParser(prog = 'Audio Generator')
-    parser.add_argument('-r', '--rate', dest='rate', default=8000, help='sample rate in Hz (default: 8000)')
-    parser.add_argument('-d', '--duration', dest='duration', default=5, help = 'audio length in second (default: 5)')
+    parser.add_argument('-r', '--rate', dest='rate', default=8000, type=float, help='sample rate in Hz (default: 8000)')
+    parser.add_argument('-d', '--duration', dest='duration', default=5, type=float, help = 'audio length in second (default: 5)')
     parser.add_argument('-t', '--type', dest='type', default='sin', help = 'one of [pulse, sin, wnoise] (default: sin)')
     parser.add_argument('-f', '--format', dest='format', default='S16_LE', help='sample format one of [S8 U8 S16_LE S16_BE U16_LE U16_BE S32_LE S32_BE U32_LE U32_BE] (default: S16_LE)')
-    parser.add_argument('-c', '--channel', dest='channel', default=1, help='sample channel count (default: 1)')
-    parser.add_argument('--freq', dest='freq', default=1000, help='"sin" wave frequency in Hz (default: 1000)')
+    parser.add_argument('-c', '--channel', dest='channel', default=1, type=int ,help='sample channel count (default: 1)')
+    parser.add_argument('--freq', dest='freq', default=1000,type=float, help='"sin" wave frequency in Hz (default: 1000)')
     parser.add_argument('-o', '--out', dest='out', default='', help='output filename')
     args = parser.parse_args()
     audio_gen(args.rate, args.duration, args.type, args.format, args.channel, args.freq, args.out)

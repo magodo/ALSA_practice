@@ -604,6 +604,7 @@ static int direct_loop(snd_pcm_t *handle,
                 }
                 if (avail < period_size) {
                         if (first) {
+                                printf("going to start\n");
                                 first = 0;
                                 err = snd_pcm_start(handle);
                                 if (err < 0) {
@@ -611,6 +612,7 @@ static int direct_loop(snd_pcm_t *handle,
                                         exit(EXIT_FAILURE);
                                 }
                         } else {
+                                printf("waiting for availability\n");
                                 err = snd_pcm_wait(handle, -1);
                                 if (err < 0) {
                                         if ((err = xrun_recovery(handle, err)) < 0) {
@@ -633,6 +635,15 @@ static int direct_loop(snd_pcm_t *handle,
                                 }
                                 first = 1;
                         }
+#if 0
+                        printf("#################################################################\n");
+                        printf("Areas:\n\tchannel[0]:\n\t\taddr: %p\n\t\tstep: %d\n\t\tfirst: %d\n",
+                                my_areas[0].addr, my_areas[0].step, my_areas[0].first);
+                        printf("Areas:\n\tchannel[1]:\n\t\taddr: %p\n\t\tstep: %d\n\t\tfirst: %d\n",
+                                my_areas[1].addr, my_areas[1].step, my_areas[1].first);
+                        printf("Offset: %lu\n", offset);
+                        printf("#################################################################\n");
+#endif
                         generate_sine(my_areas, offset, frames, &phase);
                         commitres = snd_pcm_mmap_commit(handle, offset, frames);
                         if (commitres < 0 || (snd_pcm_uframes_t)commitres != frames) {
