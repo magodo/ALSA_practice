@@ -1,1 +1,0 @@
-/usr/bin/cc     CMakeFiles/pcm.dir/pcm.c.o  -o pcm -rdynamic -lasound -lm 

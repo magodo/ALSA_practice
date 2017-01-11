@@ -92,6 +92,10 @@ def audio_gen(fs, duration, audio_type, audio_format, audio_channel, freq, out_f
         f.write(''.join(content))
 
 if "__main__" == __name__:
+<<<<<<< HEAD
+    #audio_gen(16000, 5, 'sin', 'S16_LE', 1)
+    audio_gen(16000, 30, 'sin')
+=======
     parser = argparse.ArgumentParser(prog = 'Audio Generator')
     parser.add_argument('-r', '--rate', dest='rate', default=8000, type=float, help='sample rate in Hz (default: 8000)')
     parser.add_argument('-d', '--duration', dest='duration', default=5, type=float, help = 'audio length in second (default: 5)')
@@ -102,4 +106,7 @@ if "__main__" == __name__:
     parser.add_argument('-o', '--out', dest='out', default='', help='output filename')
     args = parser.parse_args()
     audio_gen(args.rate, args.duration, args.type, args.format, args.channel, args.freq, args.out)
+>>>>>>> 319bd6d2d82761d826ec7430fe5050c6144c012c
 
+    #audio_gen(16000, 10, 'sin', freq = 4000)
+    #audio_gen(16000, 30, 'wnoise')
