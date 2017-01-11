@@ -1,1 +1,3 @@
-/home/magodo/code/c/ALSA/ALSA_practice/demo/build/CMakeFiles/pcm.dir
+/home/magodo/github/code/ALSA_practice/demo/pcm/build/CMakeFiles/edit_cache.dir
+/home/magodo/github/code/ALSA_practice/demo/pcm/build/CMakeFiles/rebuild_cache.dir
+/home/magodo/github/code/ALSA_practice/demo/pcm/build/CMakeFiles/pcm.dir

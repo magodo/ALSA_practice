@@ -91,5 +91,5 @@ def audio_gen(fs, audio_len, audio_type, audio_format = "S16_LE", audio_channel 
 
 if "__main__" == __name__:
     #audio_gen(16000, 5, 'sin', 'S16_LE', 1)
-    audio_gen(16000, 30, 'wnoise')
+    audio_gen(16000, 30, 'sin')
 

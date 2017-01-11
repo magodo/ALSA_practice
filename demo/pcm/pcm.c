@@ -626,6 +626,15 @@ static int direct_loop(snd_pcm_t *handle,
                 while (size > 0) {
                         frames = size;
                         err = snd_pcm_mmap_begin(handle, &my_areas, &offset, &frames);
+#if 1
+                        printf("\n################################\n");
+                        printf("Offset: %lu\nFrames: %lu\n", offset, frames);
+                        for (int c = 0; c != channels; ++c)
+                        {
+                            printf("areas[%d]:\n\t- addr: 0x%x\n\t- first:%u\n\t- step: %u\n", c, areas[c].addr, areas[c].first, areas[c].step);
+                        }
+                        printf("################################\n");
+#endif
                         if (err < 0) {
                                 if ((err = xrun_recovery(handle, err)) < 0) {
                                         printf("MMAP begin avail error: %s\n", snd_strerror(err));
